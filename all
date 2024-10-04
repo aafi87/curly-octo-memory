@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matrix Minor Calculator</title>
+    <style>
+        /* Basic styles for the body */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        /* Styles for the matrix input table */
+        table {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        /* Styles for table cells */
+        td {
+            border: 1px solid #000;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+        }
+        /* Styles for input fields inside the table */
+        input {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            border: none;
+            font-size: 16px;
+        }
+        /* Styles for the output minors table */
+        #output table {
+            margin-top: 10px;
+        }
+        /* Styles for headings */
+        h1, h2 {
+            color: #333;
+        }
+        /* Styles for the calculate button */
+        #calculate-button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        /* Center the matrix container */
+        #matrix-container {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Matrix Minor Calculator</h1>
+
+<!-- Dropdown to select matrix size -->
+<label for="matrix-size">Select matrix size:</label>
+<select id="matrix-size">
+    <option value="2">2 x 2</option>
+    <option value="3">3 x 3</option>
+</select>
+
+<!-- Container where the matrix input fields will be generated -->
+<div id="matrix-container"></div>
+
+<!-- Button to calculate minors -->
+<button id="calculate-button">Calculate Minors</button>
+
+<!-- Div where the output will be displayed -->
+<div id="output"></div>
+
+<!-- JavaScript code -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var matrixSizeSelect = document.getElementById('matrix-size');
+    var matrixContainer = document.getElementById('matrix-container');
+    var calculateButton = document.getElementById('calculate-button');
+    var outputDiv = document.getElementById('output');
+
+    // Function to create matrix input fields based on selected size
+    function createMatrixInputs(size) {
+        matrixContainer.innerHTML = ''; // Clear previous inputs
+        var table = document.createElement('table');
+        for (var i = 0; i < size; i++) {
+            var row = document.createElement('tr');
+            for (var j = 0; j < size; j++) {
+                var cell = document.createElement('td');
+                var input = document.createElement('input');
+                input.type = 'number';
+                input.id = 'a' + i + j; // Unique ID for each input
+                cell.appendChild(input);
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+        matrixContainer.appendChild(table);
+    }
+
+    // Initial load: create inputs for the default matrix size
+    createMatrixInputs(parseInt(matrixSizeSelect.value));
+
+    // Update matrix inputs when the matrix size changes
+    matrixSizeSelect.addEventListener('change', function() {
+        var size = parseInt(this.value);
+        createMatrixInputs(size);
+    });
+
+    // Function to calculate minors
+    function calculateMinors() {
+        var size = parseInt(matrixSizeSelect.value);
+        var matrix = [];
+
+        // Collect input values into the matrix array
+        for (var i = 0; i < size; i++) {
+            matrix[i] = [];
+            for (var j = 0; j < size; j++) {
+                var value = parseFloat(document.getElementById('a' + i + j).value);
+                if (isNaN(value)) {
+                    alert('Please enter all matrix values.');
+                    return;
+                }
+                matrix[i][j] = value;
+            }
+        }
+
+        var minors = [];
+
+        // Calculate minors for each element
+        for (var i = 0; i < size; i++) {
+            minors[i] = [];
+            for (var j = 0; j < size; j++) {
+                minors[i][j] = calculateMinor(matrix, i, j);
+            }
+        }
+
+        // Display the minors
+        displayMinors(minors);
+    }
+
+    // Function to calculate the minor of an element at position (row, col)
+    function calculateMinor(matrix, row, col) {
+        var subMatrix = [];
+
+        // Create a submatrix by excluding the current row and column
+        for (var i = 0; i < matrix.length; i++) {
+            if (i !== row) {
+                var subRow = [];
+                for (var j = 0; j < matrix.length; j++) {
+                    if (j !== col) {
+                        subRow.push(matrix[i][j]);
+                    }
+                }
+                subMatrix.push(subRow);
+            }
+        }
+
+        // Calculate the determinant of the submatrix
+        return determinant(subMatrix);
+    }
+
+    // Function to compute the determinant of a matrix
+    function determinant(matrix) {
+        var size = matrix.length;
+
+        if (size === 1) {
+            // Base case for 1x1 matrix
+            return matrix[0][0];
+        } else if (size === 2) {
+            // Base case for 2x2 matrix
+            return matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+        } else {
+            // Recursive case for larger matrices
+            var det = 0;
+            for (var j = 0; j < size; j++) {
+                det += ((j % 2 === 0 ? 1 : -1) * matrix[0][j] * determinant(getSubMatrix(matrix, 0, j)));
+            }
+            return det;
+        }
+    }
+
+    // Function to get a submatrix by removing a specific row and column
+    function getSubMatrix(matrix, row, col) {
+        var subMatrix = [];
+        for (var i = 0; i < matrix.length; i++) {
+            if (i !== row) {
+                var subRow = [];
+                for (var j = 0; j < matrix.length; j++) {
+                    if (j !== col) {
+                        subRow.push(matrix[i][j]);
+                    }
+                }
+                subMatrix.push(subRow);
+            }
+        }
+        return subMatrix;
+    }
+
+    // Function to display the minors in the output div
+    function displayMinors(minors) {
+        outputDiv.innerHTML = '<h2>Minors:</h2>';
+        var table = document.createElement('table');
+        for (var i = 0; i < minors.length; i++) {
+            var row = document.createElement('tr');
+            for (var j = 0; j < minors[i].length; j++) {
+                var cell = document.createElement('td');
+                cell.textContent = minors[i][j];
+                row.appendChild(cell);
+            }
+            table.appendChild(row);
+        }
+        outputDiv.appendChild(table);
+    }
+
+    // Event listener for the calculate button
+    calculateButton.addEventListener('click', calculateMinors);
+});
+</script>
+
+</body>
+</html>
